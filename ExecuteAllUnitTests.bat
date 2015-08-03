@@ -1,0 +1,1 @@
+PowerShell.exe Set-Location %1 ; .\Scripts\Run-AllTestsInSolution.ps1 %2
