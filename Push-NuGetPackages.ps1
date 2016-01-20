@@ -6,12 +6,24 @@ param (
     [string] $sourceFolder,
     [Parameter(Mandatory=$true)]
     [string] $nugetServer,
+    [Parameter(Mandatory=$false)]
+    [string] $nugetServerPull,
     [Parameter(Mandatory=$true)]
-    [string] $apiKey
+    [string] $apiKey,
+    [Parameter(Mandatory=$false)]
+    [string] $doNotConfirmPush
 )
 
 $nuget = "C:\Development\Selkie\Tools\Other\NuGet\nuget.exe"
 $files = gci $sourceFolder -rec -filter $pattern | ? { !$_.psiscontainer } 
+
+if ([string]::IsNullOrEmpty($nugetServerPull)) 
+{
+    $nugetServerPull = $nugetServer
+
+    Write-Host "Info: Set default pull server to: " $nugetServerPull            
+}
+
 
 Write-Host "Pushing packages to server '"$nugetServer"'..."
 
@@ -53,21 +65,30 @@ foreach($file in $files)
         
         Write-Host "Name   :" $packageName
         Write-Host "Version:" $packageVersion
-                  
-        $expected = $packageName + " " + $packageVersion
-        $actual = & $nuget list $packageName -Source $nugetServer
-        
-        Write-Host "Expected: "$expected
-        Write-Host "Actual: "$actual
-        
-        if (-Not ($actual -contains $expected))
+
+        if (!$doNotConfirmPush) 
         {
-            $message = "ERROR: Push didn't work for package '" + $file + "'!"
-            throw $message
+            Write-Host "Checking server " $nugetServerPull "..." 
+
+            $expected = $packageName + " " + $packageVersion
+            $actual = & $nuget list $packageName -Source $nugetServerPull
+        
+            Write-Host "Expected: "$expected
+            Write-Host "Actual: "$actual
+        
+            if (-Not ($actual -contains $expected))
+            {
+                $message = "ERROR: Push didn't work for package '" + $file + "'!"
+                throw $message
+            }
+            else
+            {
+                Write-Host "Push is confirmed!"
+            }
         }
         else
         {
-            Write-Host "Push is confirmed!"
+            Write-Host "Info: Push will not be confirmed!"            
         }
     }
 }
