@@ -16,6 +16,7 @@ param (
 
 $nuget = "C:\Development\Selkie\Tools\Other\NuGet\nuget.exe"
 $files = gci $sourceFolder -rec -filter $pattern | ? { !$_.psiscontainer } 
+$files = $files | select -uniq
 
 if ([string]::IsNullOrEmpty($nugetServerPull)) 
 {
@@ -90,5 +91,10 @@ foreach($file in $files)
         {
             Write-Host "Info: Push will not be confirmed!"            
         }
+    }
+    else
+    {
+        $message = "Ignoring package '" + $file + "'!" 
+        Write-Host $message
     }
 }
