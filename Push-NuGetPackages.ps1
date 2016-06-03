@@ -62,6 +62,8 @@ foreach($file in $files)
         }
         
         $packageName = $packageName -join "."
+        $packageVersionNoRevision = $packageVersion[0,1,2]
+        $packageVersionNoRevision = $packageVersionNoRevision -join "."
         $packageVersion = $packageVersion -join "."
         
         Write-Host "Name   :" $packageName
@@ -71,13 +73,19 @@ foreach($file in $files)
         {
             Write-Host "Checking server " $nugetServerPull "..." 
 
-            $expected = $packageName + " " + $packageVersion
-            $actual = & $nuget list $packageName -Source $nugetServerPull
+            $expected = $packageName + " " + $packageVersionNoRevision
+            $actual = & $nuget list $packageName -Source $nugetServerPull            
         
-            Write-Host "Expected: "$expected
-            Write-Host "Actual: "$actual
-        
-            if (-Not ($actual -contains $expected))
+            $expected = $expected.Trim()
+            $actual = $actual.Trim()
+            $success = $actual.IndexOf($expected)
+
+            Write-Host "Comparing package version..."
+            Write-Host "Expected: '"$expected"'"
+            Write-Host "Actual: '"$actual"'"
+            Write-Host "Success: '"$success"'"
+
+            if ([int32]::$success -lt [int32]::0)
             {
                 $message = "ERROR: Push didn't work for package '" + $file + "'!"
                 throw $message
